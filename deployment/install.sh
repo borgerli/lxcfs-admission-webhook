@@ -1,7 +1,13 @@
 #!/bin/bash
+kubectl create namespace lxcfs
+kubectl create -f deployment/lxcfs-daemonset.yaml
 
-./deployment/webhook-create-signed-cert.sh
-kubectl get secret lxcfs-admission-webhook-certs
+echo -n "waiting lxcfs daemon pod to start"
+until kubectl get pod -n lxcfs -l app=lxcfs 2>/dev/null| grep -i "running" &>/dev/null;do echo -n "." && sleep 1;done
+echo -n -e "started!\n"
+
+./deployment/webhook-create-signed-cert.sh --namespace lxcfs
+kubectl get secret -n lxcfs lxcfs-admission-webhook-certs
 
 kubectl create -f deployment/deployment.yaml
 kubectl create -f deployment/service.yaml
